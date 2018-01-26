@@ -1,37 +1,24 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
+import java.io.*;
+import java.security.*;
 
-public class Wallet
-{
-	private String outFile;
+/**
+ * @author Shrink
+ *
+ * Standard wallet constructor. outFile is the pathway you 
+ * want the keys to be written too. WalletNumber is temporary. 
+ * Currently just used to differentiate wallet files in my 
+ * eclipse directory.
+ */
+
+public class Wallet {
 	private int walletNumber;
-	private Signature sign;
 	private GenSig signature;
 	
 	public Wallet(String outFile, int walletNumber) {
+		
+		//GenSig probably should be renamed. Generates and holds keys and signatures in an object.
+		
 		this.signature = new GenSig(outFile + walletNumber + ".pub", outFile + walletNumber + ".key");
-		this.outFile = outFile;
 		this.walletNumber = walletNumber;
 	}
 	
@@ -51,19 +38,29 @@ public class Wallet
 		return signature.getPubKeyFile();
 	}
 	
+	//Allows wallet owner to send a transaction. Wouldn't be a currency if it couldn't be spent.
+	
 	public void sendCoin(double amount, File recievingAddress, String pathway) throws Exception {
+		
+		//Creates a new transaction, as well as a new folder to hold said transaction. Loads transaction data into the folder and then signs the transaction.
+		
 		Transaction transaction = new Transaction(signature.getPublicKey(), recievingAddress, amount);
 		TransactionFolder transactionFolder = new TransactionFolder(pathway, signature.getPubKeyFile(), recievingAddress);
 		transaction.writeToFile(pathway);
 		signature.sign(pathway + "\\" + transactionFolder.getDataFile(), pathway + "\\" + transactionFolder.getSigFile());
 	}
 	
+	/*
+	 * Validates the signature of the transaction against the senders public key and the data file.
+	 * Prevents a malicious user from sending a transaction from somebody else's account.
+	 */
+	
 	public boolean validateTransaction(String pathway) {
+		
+		//Generates a signature verification object, then tests the signature.
+		
 		VerSig verify = new VerSig();
 		return verify.verifySig(pathway + "\\sentKey.pub", pathway + "\\sigFile.txt", pathway + "\\dataFile.txt");
 	}
 	
-	public void recieveCoin() {
-		
-	}
 }

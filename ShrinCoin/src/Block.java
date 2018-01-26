@@ -1,7 +1,17 @@
 import java.security.PublicKey;
 import java.util.Arrays;
 
+/**
+ * @author Shrink
+ *
+ * Code used for creating a block object.
+ * Blocks have an associated hash unique to that block.
+ * The hash is generated using an Array List of 
+ * transaction items and the hash of the previous block.
+ */
+
 public class Block {
+	
 	private int previousHash;
 	Transaction[] transactionList;
 	private int blockHash;
@@ -9,18 +19,13 @@ public class Block {
 	
 	public Block(int previousHash, Transaction[] transactionList, PublicKey creatorAddress) {
 		this.previousHash = previousHash;
-		//transactionList[transactionList.length - 1] = "new transaction";
 		this.transactionList = transactionList;
 		
-		/*
-		 * Make sure that the creation of a block leaves extra room for the reward transaction.
-		 */
+		//Generates the hash for the block. Contents is actually a hash code array, and blockHash is the hash code of that array.
 		
 		Object[] contents = {Arrays.hashCode(transactionList), previousHash};
 		this.blockHash = Arrays.hashCode(contents);
 		
-		
-		//Transaction award = awardCoin(creatorAddress);
 	}
 	
 	public int getPreviousHash() {
@@ -38,10 +43,5 @@ public class Block {
 	public static double getCashout() {
 		return currentCashout;
 	}
-	
-	/*private Transaction awardCoin(PublicKey creatorAddress) {
-		Transaction awardTransaction = new Transaction(creatorAddress, currentCashout);
-		return awardTransaction;
-	}*/
 	
 }

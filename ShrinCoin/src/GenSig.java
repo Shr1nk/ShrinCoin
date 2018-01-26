@@ -9,6 +9,13 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
+/**
+ * @author Shrink
+ *
+ * This class is used to generate a public key, private key,
+ * and signature object for each wallet.
+ */
+
 public class GenSig {
 	
 	private PrivateKey pvt;
@@ -17,16 +24,16 @@ public class GenSig {
 	
 	private File pubKey;
 	private File pvtKey;
-	private String pubKeyFile;
 	private String pvtKeyFile;
+	
+	//Constructor for a GenSig object
 	
 	public GenSig(String pubKeyFile, String pvtKeyFile) {
 		try {
 			
-			this.pubKeyFile = pubKeyFile;
 			this.pvtKeyFile = pvtKeyFile;
 			
-			//System.out.println(pubKeyFile + "pub");
+			//Generates a key pair object. Used to create public/private keys
 			
 			KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
 			SecureRandom random = new SecureRandom();
@@ -37,8 +44,12 @@ public class GenSig {
 			pvt = pair.getPrivate();
 			pub = pair.getPublic();
 									
+			//Generates a signature object. Used to create signatures.
+			
 			sign = Signature.getInstance("SHA256withRSA");
 			sign.initSign(pvt);
+			
+			//Makes files for the keys
 			
 			this.pubKey = new File(pubKeyFile);
 			if(this.pubKey.exists()) {
@@ -55,6 +66,8 @@ public class GenSig {
 				this.pvtKey.createNewFile();
 			}
 			
+			//Writes keys to the file
+			
 			FileOutputStream out;
 			
 			out = new FileOutputStream(pubKeyFile);
@@ -66,7 +79,7 @@ public class GenSig {
 			out.close();
 			
 		} catch (Exception e) {
-			System.err.println("Caught exception " + e.toString());
+			e.printStackTrace();
 		}
 		
 		
@@ -79,11 +92,15 @@ public class GenSig {
 	
 	public PrivateKey getPrivateKey() throws Exception {
 		
+		//Reads bytes from file and builds an array
+		
 		FileInputStream keyfis = new FileInputStream(pvtKeyFile);
 		byte[] encKey = new byte[keyfis.available()];
 		keyfis.read(encKey);
 		
 		keyfis.close();
+		
+		//Decodes byte array to rebuild key
 		
 		PKCS8EncodedKeySpec pvtKeySpec = new PKCS8EncodedKeySpec(encKey);
 		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -91,11 +108,16 @@ public class GenSig {
 	}
 	
 	public PublicKey getPublicKey() throws Exception {
+		
+		//Reads bytes from file and builds an array
+		
 		FileInputStream keyfis = new FileInputStream(pubKey.getName());
 		byte[] encKey = new byte[keyfis.available()];
 		keyfis.read(encKey);
 		
 		keyfis.close();
+		
+		//Decodes byte array to rebuild key
 		
 		X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
 		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -103,8 +125,12 @@ public class GenSig {
 	}
 	
 	public void sign(String dataFile, String sigFile) {
+		
 		FileInputStream fis;
 		try {
+			
+			//Reads data from data file and inputs to signature object
+			
 			fis = new FileInputStream(dataFile);
 			BufferedInputStream bufin = new BufferedInputStream(fis);
 			byte[] buffer = new byte[2048];
@@ -115,13 +141,15 @@ public class GenSig {
 			};
 			bufin.close();
 	
-			byte[] realSig = sign.sign();
-				
+			byte[] realSig = sign.sign(); // Creates signature
+			
+			//Writes signature to file
+			
 			FileOutputStream sigfos = new FileOutputStream(sigFile);
 			sigfos.write(realSig);
 			sigfos.close();
 		} catch (Exception e) {
-			System.err.println("Caught exception " + e.toString());
+			e.printStackTrace();
 		}
 	}
 }
